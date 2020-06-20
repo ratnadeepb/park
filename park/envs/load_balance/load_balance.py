@@ -37,17 +37,18 @@ class LoadBalanceEnv(core.Env):
         time 5. Then the reward is - (1 * 1 + 1 * 2.4 + 2 * 5).
         Thus, the sum of the rewards would be negative of total
         (waiting + processing) time for all jobs.
-    
+
     * REFERENCE *
         Figure 1a, Section 6.2 and Appendix J
         Variance Reduction for Reinforcement Learning in Input-Driven Environments. 
         H Mao, SB Venkatakrishnan, M Schwarzkopf, M Alizadeh.
         https://openreview.net/forum?id=Hyg1G2AqtQ
-    
+
         Certain optimality properties of the first-come first-served discipline for g/g/s queues.
         DJ Daley.
         Stochastic Processes and their Applications, 25:301–308, 1987.
     """
+
     def __init__(self):
         # observation and action space
         self.setup_space()
@@ -93,7 +94,8 @@ class LoadBalanceEnv(core.Env):
     def initialize_servers(self, service_rates):
         servers = []
         for server_id in range(config.num_servers):
-            server = Server(server_id, service_rates[server_id], self.wall_time)
+            server = Server(
+                server_id, service_rates[server_id], self.wall_time)
             servers.append(server)
         return servers
 
@@ -110,8 +112,8 @@ class LoadBalanceEnv(core.Env):
             # report a warning
             if load > self.obs_high[server.server_id]:
                 logger.warn('Server ' + str(server.server_id) + ' at time ' +
-                             str(self.wall_time.curr_time) + ' has load ' + str(load) +
-                             ' larger than obs_high ' + str(self.obs_high[server.server_id]))
+                            str(self.wall_time.curr_time) + ' has load ' + str(load) +
+                            ' larger than obs_high ' + str(self.obs_high[server.server_id]))
                 load = self.obs_high[server.server_id]
             obs_arr.append(load)
 
@@ -121,8 +123,8 @@ class LoadBalanceEnv(core.Env):
         else:
             if self.incoming_job.size > self.obs_high[-1]:
                 logger.warn('Incoming job at time ' + str(self.wall_time.curr_time) +
-                              ' has size ' + str(self.incoming_job.size) +
-                              ' larger than obs_high ' + str(self.obs_high[-1]))
+                            ' has size ' + str(self.incoming_job.size) +
+                            ' larger than obs_high ' + str(self.obs_high[-1]))
                 obs_arr.append(self.obs_high[-1])
             else:
                 obs_arr.append(self.incoming_job.size)
@@ -131,6 +133,13 @@ class LoadBalanceEnv(core.Env):
         assert self.observation_space.contains(obs_arr)
 
         return obs_arr
+
+    # def observe(self):
+    #     # return the queue lengths of each server
+    #     obs_arr = []
+    #     for server in self.servers:
+    #         obs_arr.append(len(server.queue))
+    #     return obs_arr
 
     def reset(self):
         for server in self.servers:
@@ -154,7 +163,8 @@ class LoadBalanceEnv(core.Env):
         # a warning message will show up every time e.g., the observation falls
         # out of the observation space
         self.obs_low = np.array([0] * (config.num_servers + 1))
-        self.obs_high = np.array([config.load_balance_obs_high] * (config.num_servers + 1))
+        self.obs_high = np.array(
+            [config.load_balance_obs_high] * (config.num_servers + 1))
         self.observation_space = spaces.Box(
             low=self.obs_low, high=self.obs_high, dtype=np.float32)
         self.action_space = spaces.Discrete(config.num_servers)
@@ -179,8 +189,11 @@ class LoadBalanceEnv(core.Env):
         # set to compute reward from this time point
         reward = 0
 
-        while len(self.timeline) > 0:
+        # Deep start
+        last_len = 0
+        # last_time = 0.0
 
+        while len(self.timeline) > 0:
             new_time, obj = self.timeline.pop()
 
             # update reward
@@ -188,7 +201,7 @@ class LoadBalanceEnv(core.Env):
             for server in self.servers:
                 if server.curr_job is not None:
                     assert server.curr_job.finish_time >= \
-                           self.wall_time.curr_time  # curr job should be valid
+                        self.wall_time.curr_time  # curr job should be valid
                     num_active_jobs += 1
             reward -= (new_time - self.wall_time.curr_time) * num_active_jobs
 
@@ -209,7 +222,7 @@ class LoadBalanceEnv(core.Env):
                     # don't store infinite streaming
                     # TODO: stream the complete job to some file
                     if len(self.finished_jobs) > 0:
-                        self.finished_jobs[-1] +=1
+                        self.finished_jobs[-1] += 1
                     else:
                         self.finished_jobs = [1]
                 if job.server.curr_job == job:
@@ -223,7 +236,34 @@ class LoadBalanceEnv(core.Env):
                 print("illegal event type")
                 exit(1)
 
-        done = ((len(self.timeline) == 0) and \
-               self.incoming_job is None)
+        done = ((len(self.timeline) == 0) and
+                self.incoming_job is None)
 
-        return self.observe(), reward, done, {'curr_time': self.wall_time.curr_time}
+        # Deep start
+        # jobs that finished in the this step
+        # jobs = []
+        # for job in self.finished_jobs:
+        #     if last_time < job.finish_time <= new_time:
+        #         # if job.finish_time > last_time and job.finish_time <= new_time:
+        #         jobs.append(
+        #             (job.server.server_id, job.finish_time - job.start_time, job.q_length))
+        # # update last time
+        # last_time = new_time
+
+        if len(self.finished_jobs) - last_len < 0:
+            print("decreased")
+        last_len = len(self.finished_jobs)
+        if done:
+            job = self.finished_jobs[-1]
+            print("job size:", job.size)
+            print("job arrival time:", job.arrival_time)
+            print("job server:", job.server.server_id)
+            print("job server rate:", job.server.service_rate)
+            print("job start time:", job.start_time)
+            print("job finish time:", job.finish_time)
+            print("response time:", job.finish_time - job.start_time)
+            return self.observe(), reward, self.finished_jobs, done, {'curr_time': self.wall_time.curr_time}
+        # Deep end
+
+        return self.observe(), reward, [], done, {'curr_time': self.wall_time.curr_time}
+        # return self.observe(), reward, jobs, done, {'curr_time': self.wall_time.curr_time}

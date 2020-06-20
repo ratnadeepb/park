@@ -11,14 +11,16 @@ class Server(object):
 
     def schedule(self, job):
         self.queue.append(job)
+        # job.q_length = len(self.queue)  # Deep added
+        job.q_length = sum(j.size for j in self.queue)  # Deep added
         job.server = self
 
     def process(self):
         # if the server is currently idle (no current
         # job or current job is done), and there are jobs
         # in the queue, then FIFO process a job
-        if (self.curr_job is None or \
-           self.curr_job.finish_time <= self.wall_time.curr_time) \
+        if (self.curr_job is None or
+            self.curr_job.finish_time <= self.wall_time.curr_time) \
            and len(self.queue) > 0:
 
             self.curr_job = self.queue.popleft()
