@@ -190,7 +190,7 @@ class LoadBalanceEnv(core.Env):
         reward = 0
 
         # Deep start
-        last_len = 0
+        # last_len = 0
         # last_time = 0.0
 
         while len(self.timeline) > 0:
@@ -250,18 +250,18 @@ class LoadBalanceEnv(core.Env):
         # # update last time
         # last_time = new_time
 
-        if len(self.finished_jobs) - last_len < 0:
-            print("decreased")
-        last_len = len(self.finished_jobs)
+        # if len(self.finished_jobs) - last_len < 0:
+        #     print("decreased")
+        # last_len = len(self.finished_jobs)
         if done:
-            job = self.finished_jobs[-1]
-            print("job size:", job.size)
-            print("job arrival time:", job.arrival_time)
-            print("job server:", job.server.server_id)
-            print("job server rate:", job.server.service_rate)
-            print("job start time:", job.start_time)
-            print("job finish time:", job.finish_time)
-            print("response time:", job.finish_time - job.start_time)
+            # job = self.finished_jobs[-1]
+            # print("job size:", job.size)
+            # print("job arrival time:", job.arrival_time)
+            # print("job server:", job.server.server_id)
+            # print("job server rate:", job.server.service_rate)
+            # print("job start time:", job.start_time)
+            # print("job finish time:", job.finish_time)
+            # print("response time:", job.finish_time - job.start_time)
             return self.observe(), reward, self.finished_jobs, done, {'curr_time': self.wall_time.curr_time}
         # Deep end
 
