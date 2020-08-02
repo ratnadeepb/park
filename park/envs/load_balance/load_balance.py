@@ -110,27 +110,27 @@ class LoadBalanceEnv(core.Env):
                 load += server.curr_job.finish_time - self.wall_time.curr_time
             # if the load is larger than observation threshold
             # report a warning
-            if load > self.obs_high[server.server_id]:
-                logger.warn('Server ' + str(server.server_id) + ' at time ' +
-                            str(self.wall_time.curr_time) + ' has load ' + str(load) +
-                            ' larger than obs_high ' + str(self.obs_high[server.server_id]))
-                load = self.obs_high[server.server_id]
+            # if load > self.obs_high[server.server_id]:
+            #     logger.warn('Server ' + str(server.server_id) + ' at time ' +
+            #                 str(self.wall_time.curr_time) + ' has load ' + str(load) +
+            #                 ' larger than obs_high ' + str(self.obs_high[server.server_id]))
+            #     load = self.obs_high[server.server_id]
             obs_arr.append(load)
 
         # incoming job size
         if self.incoming_job is None:
             obs_arr.append(0)
         else:
-            if self.incoming_job.size > self.obs_high[-1]:
-                logger.warn('Incoming job at time ' + str(self.wall_time.curr_time) +
-                            ' has size ' + str(self.incoming_job.size) +
-                            ' larger than obs_high ' + str(self.obs_high[-1]))
-                obs_arr.append(self.obs_high[-1])
-            else:
-                obs_arr.append(self.incoming_job.size)
+            # if self.incoming_job.size > self.obs_high[-1]:
+            #     logger.warn('Incoming job at time ' + str(self.wall_time.curr_time) +
+            #                 ' has size ' + str(self.incoming_job.size) +
+            #                 ' larger than obs_high ' + str(self.obs_high[-1]))
+            #     obs_arr.append(self.obs_high[-1])
+            # else:
+            obs_arr.append(self.incoming_job.size)
 
         obs_arr = np.array(obs_arr)
-        assert self.observation_space.contains(obs_arr)
+        # assert self.observation_space.contains(obs_arr)
 
         return obs_arr
 

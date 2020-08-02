@@ -8,6 +8,12 @@ def generate_job(np_random):
         config.job_size_pareto_shape) + 1) *
         config.job_size_pareto_scale)
 
+    # restrict the maximum size of the job
+    if size > config.job_size_pareto_scale * 100:
+        size = int(config.job_size_pareto_scale * 100)
+
+    # size = int(np_random.uniform(500, 2500))
+
     t = int(np_random.exponential(config.job_interval))
 
     return t, size

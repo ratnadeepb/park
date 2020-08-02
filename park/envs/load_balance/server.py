@@ -13,6 +13,7 @@ class Server(object):
         self.queue.append(job)
         # job.q_length = len(self.queue)  # Deep added
         job.q_length = sum(j.size for j in self.queue)  # Deep added
+        # job.q_length += job.size  # Deep added
         job.server = self
 
     def process(self):
